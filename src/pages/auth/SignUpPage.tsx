@@ -14,21 +14,20 @@ export default function SignUpPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setNotice(null);
-    try {
-      await authService.signUp({ name, company, email, password });
-    } catch {
-      setNotice(
-        "Account creation isn't connected yet — this is a UI preview of Competitor Radar. Real sign-up will be enabled once the backend is wired up."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
+  try {
+    await authService.signUp(email, password, fullName);
+    navigate('/dashboard');
+  } catch (err: any) {
+    setError(err.message || 'Failed to create account.');
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <AuthLayout
       title="Create your account"
