@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const importantAlerts = alerts.filter((a) => a.importance === "high").length;
   const lastChecked = competitors
     .map((c) => c.lastChecked)
+    .filter(Boolean)
     .sort()
     .reverse()[0];
 
@@ -74,28 +75,32 @@ export default function DashboardPage() {
                   View all
                 </Link>
               </div>
-              <ul className="divide-y divide-border-soft">
-                {alerts.slice(0, 5).map((alert) => (
-                  <li key={alert.id} className="flex items-start gap-3 px-6 py-4">
-                    <span
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                        alert.importance === "high"
-                          ? "bg-alert"
-                          : alert.importance === "medium"
-                          ? "bg-amber"
-                          : "bg-signal"
-                      }`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-ink">{alert.summary}</p>
-                      <p className="mt-1 text-xs text-ink-faint">
-                        {alert.competitorName} · {ALERT_TYPE_LABELS[alert.type]} ·{" "}
-                        {formatRelativeTime(alert.detectedAt)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {alerts.length === 0 ? (
+                <p className="p-6 text-sm text-ink-soft">No recent activity detected.</p>
+              ) : (
+                <ul className="divide-y divide-border-soft">
+                  {alerts.slice(0, 5).map((alert) => (
+                    <li key={alert.id} className="flex items-start gap-3 px-6 py-4">
+                      <span
+                        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                          alert.importance === "high"
+                            ? "bg-alert"
+                            : alert.importance === "medium"
+                            ? "bg-amber"
+                            : "bg-signal"
+                        }`}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-ink">{alert.summary}</p>
+                        <p className="mt-1 text-xs text-ink-faint">
+                          {alert.competitorName} · {ALERT_TYPE_LABELS[alert.type]} ·{" "}
+                          {formatRelativeTime(alert.detectedAt)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Card>
 
             <Card padded={false}>
@@ -105,27 +110,31 @@ export default function DashboardPage() {
                   Manage
                 </Link>
               </div>
-              <ul className="divide-y divide-border-soft">
-                {competitors.slice(0, 5).map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-3 px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-sunken text-xs font-semibold text-ink-soft">
-                        {c.logoInitials}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-ink">{c.name}</p>
-                        <p className="text-xs text-ink-faint">{c.website}</p>
+              {competitors.length === 0 ? (
+                <p className="p-6 text-sm text-ink-soft">No competitors tracked yet.</p>
+              ) : (
+                <ul className="divide-y divide-border-soft">
+                  {competitors.slice(0, 5).map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-3 px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-sunken text-xs font-semibold text-ink-soft">
+                          {c.logoInitials}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-ink">{c.name}</p>
+                          <p className="text-xs text-ink-faint">{c.website}</p>
+                        </div>
                       </div>
-                    </div>
-                    <Badge
-                      tone={c.status === "active" ? "mint" : c.status === "pending" ? "amber" : "neutral"}
-                      dot
-                    >
-                      {c.status}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
+                      <Badge
+                        tone={c.status === "active" ? "mint" : c.status === "pending" ? "amber" : "neutral"}
+                        dot
+                      >
+                        {c.status}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Card>
           </div>
         </>
