@@ -1,14 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { TextField, SelectField, ToggleRow } from "../../components/ui/FormField";
-import { mockUser, mockNotificationPreferences, mockSubscription } from "../../data/mockUser";
+import { authService, supabase } from "../../services/authService";
+import { mockNotificationPreferences, mockSubscription } from "../../data/mockUser";
 import { plans } from "../../data/plans";
 
 export default function SettingsPage() {
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
   const [prefs, setPrefs] = useState(mockNotificationPreferences);
   const currentPlan = plans.find((p) => p.id === mockSubscription.planId);
+
+  useEffect(() => {
+    async function loadUserData() {
+      try {
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setName(user.name || "");
+          setCompany(user.company || "");
+          setEmail(user.email || "");
+        }
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUserData();
+  }, []);
+
+  async function handleSaveAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setNotice(null);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: name,
+          company: company,
+        },
+      });
+
+      if (error) throw error;
+      setNotice("Account information updated successfully!");
+    } catch (err: any) {
+      setNotice(err.message || "Failed to update account information.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <DashboardLayout title="Settings" subtitle="Manage your account, notifications, and plan.">
@@ -18,15 +67,43 @@ export default function SettingsPage() {
           <h2 className="font-display text-base font-semibold text-ink">Account information</h2>
           <p className="mt-1 text-sm text-ink-soft">Your personal and company details.</p>
 
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField label="Full name" defaultValue={mockUser.name} />
-            <TextField label="Company" defaultValue={mockUser.company} />
-            <TextField label="Email" type="email" defaultValue={mockUser.email} className="sm:col-span-2" />
-          </div>
+          {loading ? (
+            <div className="mt-5 h-32 animate-pulse rounded bg-surface-subtle" />
+          ) : (
+            <form onSubmit={handleSaveAccount} className="mt-5 flex flex-col gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <TextField
+                  label="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <TextField
+                  label="Company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                />
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={email}
+                  disabled
+                  className="sm:col-span-2 opacity-75"
+                />
+              </div>
 
-          <div className="mt-5 flex justify-end">
-            <Button disabled>Save changes</Button>
-          </div>
+              {notice && (
+                <div className="rounded-[var(--radius-control)] border border-amber-tint bg-amber-tint/60 p-3 text-sm text-amber">
+                  {notice}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </form>
+          )}
         </Card>
 
         {/* Notification preferences */}
@@ -61,8 +138,7 @@ export default function SettingsPage() {
             />
           </div>
           <p className="mt-3 text-xs text-ink-faint">
-            Email delivery isn't connected yet — these preferences are saved locally for this
-            preview.
+            Email delivery isn't connected yet — these preferences are saved locally for this preview.
           </p>
         </Card>
 
