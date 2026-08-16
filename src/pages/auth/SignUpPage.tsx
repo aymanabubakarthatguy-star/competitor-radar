@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { TextField } from "../../components/ui/FormField";
 import { Button } from "../../components/ui/Button";
@@ -13,6 +13,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -20,10 +21,9 @@ export default function SignUpPage() {
     setNotice(null);
     try {
       await authService.signUp({ name, company, email, password });
-    } catch {
-      setNotice(
-        "Account creation isn't connected yet — this is a UI preview of Competitor Radar. Real sign-up will be enabled once the backend is wired up."
-      );
+      navigate("/dashboard");
+    } catch (err: any) {
+      setNotice(err.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
