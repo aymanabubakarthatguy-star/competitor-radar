@@ -25,7 +25,7 @@ export const authService = {
     return {
       id: data.user.id,
       email: data.user.email || details.email,
-      fullName: details.name,
+      name: details.name,
       company: details.company,
     };
   },
@@ -42,7 +42,7 @@ export const authService = {
     return {
       id: data.user.id,
       email: data.user.email || credentials.email,
-      fullName: data.user.user_metadata?.full_name || '',
+      name: data.user.user_metadata?.full_name || '',
       company: data.user.user_metadata?.company || '',
     };
   },
@@ -64,7 +64,7 @@ export const authService = {
     return {
       id: user.id,
       email: user.email || '',
-      fullName: user.user_metadata?.full_name || '',
+      name: user.user_metadata?.full_name || '',
       company: user.user_metadata?.company || '',
     };
   },
