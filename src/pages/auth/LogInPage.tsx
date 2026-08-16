@@ -19,10 +19,9 @@ export default function LogInPage() {
     setNotice(null);
     try {
       await authService.logIn({ email, password });
-    } catch {
-      setNotice(
-        "Log in isn't connected yet — this is a UI preview. Use \"Preview the dashboard\" below to explore the product with demo data."
-      );
+      navigate("/dashboard");
+    } catch (err: any) {
+      setNotice(err.message || "Invalid login credentials.");
     } finally {
       setLoading(false);
     }
