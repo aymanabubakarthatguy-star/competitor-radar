@@ -1,58 +1,113 @@
-/**
- * competitorService
- * ------------------------------------------------------------------
- * DEMO IMPLEMENTATION. Reads and writes an in-memory copy of the mock
- * competitor list so the Competitors page feels real to click around
- * in. Nothing here is persisted or connected to a database yet.
- * Replace the internals of each method with real Supabase calls
- * later — the function signatures are designed to stay the same.
- * ------------------------------------------------------------------
- */
+import { supabase } from "./authService";
 import type { Competitor, CompetitorFormValues } from "../types";
-import { mockCompetitors } from "../data/mockCompetitors";
-
-let competitors: Competitor[] = [...mockCompetitors];
-
-function delay<T>(value: T, ms = 250): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
-}
 
 export const competitorService = {
   async list(): Promise<Competitor[]> {
-    return delay([...competitors]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from("competitors")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      website: row.website,
+      logoInitials: row.name
+        ? row.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
+        : "C",
+      status: row.status || "active",
+      frequency: row.frequency || "daily",
+      scope: row.scope || ["pricing"],
+      lastChecked: row.last_checked || new Date().toISOString(),
+      changesDetected: row.changes_detected || 0,
+      addedAt: row.created_at || new Date().toISOString(),
+    }));
   },
 
   async add(values: CompetitorFormValues): Promise<Competitor> {
-    const newCompetitor: Competitor = {
-      id: `comp_${Math.random().toString(36).slice(2, 9)}`,
-      name: values.name,
-      website: values.website,
-      logoInitials: values.name
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User must be logged in to add a competitor.");
+
+    const { data, error } = await supabase
+      .from("competitors")
+      .insert({
+        user_id: user.id,
+        name: values.name,
+        website: values.website,
+        frequency: values.frequency,
+        scope: values.scope,
+        status: "active",
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      name: data.name,
+      website: data.website,
+      logoInitials: data.name
         .split(" ")
-        .map((w) => w[0])
+        .map((w: string) => w[0])
         .join("")
         .slice(0, 2)
         .toUpperCase(),
-      status: "pending",
-      frequency: values.frequency,
-      scope: values.scope,
-      lastChecked: new Date().toISOString(),
+      status: data.status || "active",
+      frequency: data.frequency,
+      scope: data.scope,
+      lastChecked: data.last_checked || new Date().toISOString(),
       changesDetected: 0,
-      addedAt: new Date().toISOString(),
+      addedAt: data.created_at || new Date().toISOString(),
     };
-    competitors = [newCompetitor, ...competitors];
-    return delay(newCompetitor);
   },
 
   async update(id: string, values: Partial<CompetitorFormValues>): Promise<Competitor> {
-    competitors = competitors.map((c) => (c.id === id ? { ...c, ...values } : c));
-    const updated = competitors.find((c) => c.id === id);
-    if (!updated) throw new Error("Competitor not found");
-    return delay(updated);
+    const { data, error } = await supabase
+      .from("competitors")
+      .update({
+        ...(values.name && { name: values.name }),
+        ...(values.website && { website: values.website }),
+        ...(values.frequency && { frequency: values.frequency }),
+        ...(values.scope && { scope: values.scope }),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      name: data.name,
+      website: data.website,
+      logoInitials: data.name
+        .split(" ")
+        .map((w: string) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+      status: data.status || "active",
+      frequency: data.frequency,
+      scope: data.scope,
+      lastChecked: data.last_checked || new Date().toISOString(),
+      changesDetected: data.changes_detected || 0,
+      addedAt: data.created_at || new Date().toISOString(),
+    };
   },
 
   async remove(id: string): Promise<void> {
-    competitors = competitors.filter((c) => c.id !== id);
-    return delay(undefined);
+    const { error } = await supabase
+      .from("competitors")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
   },
 };
