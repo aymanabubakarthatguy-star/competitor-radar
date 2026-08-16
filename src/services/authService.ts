@@ -1,41 +1,43 @@
-/**
- * authService
- * ------------------------------------------------------------------
- * NOT FUNCTIONAL YET. This file defines the shape of the auth layer so
- * the Sign Up / Log In / Forgot Password screens have something real to
- * call. Every method currently throws, on purpose — there is no mock
- * "fake login" here, because pretending to authenticate would be
- * misleading. Wire this up to Supabase Auth (or another provider) when
- * the backend work begins.
- * ------------------------------------------------------------------
- */
-import type { AuthCredentials, SignUpDetails, User } from "../types";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const authService = {
-  async signUp(_details: SignUpDetails): Promise<User> {
-    throw new Error(
-      "authService.signUp is not implemented yet. Connect Supabase Auth (or similar) here."
-    );
+  async signUp(email: string, password: string, fullName: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    if (error) throw error;
+    return data;
   },
 
-  async logIn(_credentials: AuthCredentials): Promise<User> {
-    throw new Error(
-      "authService.logIn is not implemented yet. Connect Supabase Auth (or similar) here."
-    );
+  async logIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    return data;
   },
 
-  async requestPasswordReset(_email: string): Promise<void> {
-    throw new Error(
-      "authService.requestPasswordReset is not implemented yet. Connect a real email/reset provider here."
-    );
+  async logOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
 
-  async logOut(): Promise<void> {
-    throw new Error("authService.logOut is not implemented yet.");
-  },
-
-  async getCurrentUser(): Promise<User | null> {
-    // Will eventually read the active session from Supabase.
-    return null;
+  async getCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
   },
 };
