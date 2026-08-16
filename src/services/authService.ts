@@ -22,11 +22,17 @@ export const authService = {
     if (error) throw error;
     if (!data.user) throw new Error("No user returned from sign up");
 
+    const initials = details.name
+      ? details.name.split(' ').map(n => n[0]).join('').toUpperCase()
+      : details.email[0].toUpperCase();
+
     return {
       id: data.user.id,
       email: data.user.email || details.email,
       name: details.name,
       company: details.company,
+      avatarInitials: initials,
+      createdAt: new Date().toISOString(),
     };
   },
 
@@ -39,11 +45,20 @@ export const authService = {
     if (error) throw error;
     if (!data.user) throw new Error("No user returned from login");
 
+    const name = data.user.user_metadata?.full_name || credentials.email;
+    const initials = name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase();
+
     return {
       id: data.user.id,
       email: data.user.email || credentials.email,
-      name: data.user.user_metadata?.full_name || '',
+      name: name,
       company: data.user.user_metadata?.company || '',
+      avatarInitials: initials,
+      createdAt: data.user.created_at || new Date().toISOString(),
     };
   },
 
@@ -61,11 +76,18 @@ export const authService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+    const name = user.user_metadata?.full_name || user.email || '';
+    const initials = name
+      ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+      : 'U';
+
     return {
       id: user.id,
       email: user.email || '',
-      name: user.user_metadata?.full_name || '',
+      name: name,
       company: user.user_metadata?.company || '',
+      avatarInitials: initials,
+      createdAt: user.created_at || new Date().toISOString(),
     };
   },
 };
