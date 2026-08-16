@@ -13,20 +13,20 @@ export default function LogInPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setNotice(null);
-    try {
-      await authService.logIn({ email, password });
-    } catch {
-      setNotice(
-        "Log in isn't connected yet — this is a UI preview. Use \"Preview the dashboard\" below to explore the product with demo data."
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+
+  try {
+    await authService.logIn(email, password);
+    navigate('/dashboard');
+  } catch (err: any) {
+    setError(err.message || 'Invalid login credentials.');
+  } finally {
+    setLoading(false);
   }
+};
 
   return (
     <AuthLayout
