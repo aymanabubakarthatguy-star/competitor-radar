@@ -20,7 +20,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   const handleSignOut = async () => {
     if (onNavigate) onNavigate();
-    await authService.signOut();
+    await authService.logOut();
     navigate("/login");
   };
 
