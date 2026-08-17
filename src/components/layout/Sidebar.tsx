@@ -1,6 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { RadarMark } from "../radar/RadarMark";
 import { APP_NAME } from "../../utils/constants";
+import { authService } from "../../services/authService";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: DashboardIcon, end: true },
@@ -15,6 +16,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNavigate }: SidebarProps) {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    if (onNavigate) onNavigate();
+    await authService.signOut();
+    navigate("/login");
+  };
+
   return (
     <div className="flex h-full w-64 flex-col bg-navy text-white">
       <div className="flex items-center gap-2.5 px-6 py-6">
@@ -43,12 +52,22 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="mx-3.5 mb-5 rounded-xl border border-navy-border bg-navy-soft p-4">
+      <div className="mx-3.5 mb-3 rounded-xl border border-navy-border bg-navy-soft p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-signal-bright">Pro plan</p>
         <p className="mt-1 text-xs text-white/60">5 of 5 competitors used</p>
         <div className="mt-2.5 h-1.5 w-full rounded-full bg-white/10">
           <div className="h-1.5 w-full rounded-full bg-signal-bright" />
         </div>
+      </div>
+
+      <div className="border-t border-white/10 px-3.5 py-3">
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-sm font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+        >
+          <LogoutIcon />
+          Sign out
+        </button>
       </div>
     </div>
   );
@@ -113,6 +132,20 @@ function SettingsIcon() {
         strokeWidth="1.4"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+function LogoutIcon() {
+  return (
+    <svg {...iconProps()}>
+      <path
+        d="M6.5 15.5H4C3.17157 15.5 2.5 14.8284 2.5 14V4C2.5 3.17157 3.17157 2.5 4 2.5H6.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path d="M12.5 12.5L16 9L12.5 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 9H15.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
 }
