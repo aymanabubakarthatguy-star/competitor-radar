@@ -7,10 +7,15 @@ export const reportService = {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Fetch user's competitors
+      if (!user) {
+        return mockReports;
+      }
+
+      // Fetch user's competitors using user.id
       const { data: competitors } = await supabase
         .from("competitors")
-        .select("id, name");
+        .select("id, name")
+        .eq("user_id", user.id);
 
       // Fetch alerts
       const { data: alerts } = await supabase
@@ -18,7 +23,6 @@ export const reportService = {
         .select("*")
         .order("detected_at", { ascending: false });
 
-      // Fall back to mock reports if no real data is found
       if (!competitors || competitors.length === 0) {
         return mockReports;
       }
