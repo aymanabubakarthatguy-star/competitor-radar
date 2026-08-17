@@ -20,9 +20,12 @@ export const alertService = {
         competitorName: item.competitor_name,
         type: item.type,
         importance: item.importance,
-        summary: item.summary,
+        title: item.title ?? item.summary ?? "",
+        summary: item.summary ?? item.title ?? "",
+        aiInsight: item.ai_insight ?? item.details ?? "",
         detectedAt: item.detected_at,
-        isRead: item.is_read ?? false,
+        read: item.read ?? item.is_read ?? false,
+        isRead: item.is_read ?? item.read ?? false,
         details: item.details,
       }));
     } catch (err) {
@@ -35,7 +38,7 @@ export const alertService = {
     try {
       await supabase
         .from("alerts")
-        .update({ is_read: true })
+        .update({ read: true, is_read: true })
         .eq("id", id);
     } catch (err) {
       console.warn(`Could not mark alert ${id} as read in Supabase.`, err);
